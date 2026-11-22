@@ -5,7 +5,7 @@ pipeline {
  buildDiscarder(logRotator(numToKeepStr: '5'))
  }
  environment {
- OWNER = 'riya-sharma' // your prefix, lowercase
+ OWNER = 'lakshya' // your prefix, lowercase
  IMAGE = "${OWNER}-day2-web"
  TAG = "${BUILD_NUMBER}"
  CONTAINER = "${OWNER}-web-${BUILD_NUMBER}"
