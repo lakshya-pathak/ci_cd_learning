@@ -1,0 +1,45 @@
+pipeline {
+ agent any
+ options {
+ timeout(time: 10, unit: 'MINUTES')
+ buildDiscarder(logRotator(numToKeepStr: '5'))
+ }
+ environment {
+ OWNER = 'riya-sharma' // your prefix, lowercase
+ IMAGE = "${OWNER}-day2-web"
+ TAG = "${BUILD_NUMBER}"
+ CONTAINER = "${OWNER}-web-${BUILD_NUMBER}"
+ }
+ stages {
+ stage('Docker info') {
+ steps {
+ sh 'docker version'
+ }
+ }
+ stage('Build image') {
+ steps {
+ sh 'docker build -t $IMAGE:$TAG .'
+ }
+ }
+ stage('Smoke test') {
+ steps {
+ sh 'docker run -d --name $CONTAINER $IMAGE:$TAG'
+ sh 'sleep 2'
+ sh 'docker exec $CONTAINER wget -qO- http://127.0.0.1 | grep "Hello Jenkins"'
+ }
+ }
+ stage('Image report') {
+ steps {
+ sh 'docker image ls $IMAGE'
+ sh 'docker image inspect $IMAGE:$TAG --format "Size: {{.Size}} bytes"'
+ sh 'docker history $IMAGE:$TAG | head -5'
+ }
+ }
+ }
+ post {
+ always {
+ sh 'docker rm -f $CONTAINER || true'
+ sh 'docker rmi $IMAGE:$TAG || true'
+ }
+ }
+}
